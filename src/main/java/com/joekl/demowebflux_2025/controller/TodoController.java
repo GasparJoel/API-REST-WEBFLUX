@@ -37,15 +37,27 @@ import java.time.Duration;
     }
 
     @PostMapping
-    public Mono<Todo> create(@RequestBody Todo todo){
-        return todoService.create(todo);
+    public Mono<ResponseEntity<Todo>> create(@RequestBody Todo todo){
+
+            return todoService.create(todo)
+                    .map(t->ResponseEntity.created(URI.create("/api/v1/todos/"+todo.getId()))
+                            .body(t));
     }
+
+
     @DeleteMapping("/{id}")
-    public Mono<Void> delete(@PathVariable String id){
-        return    todoService.findById(id)
-      //             .flatMap(todo->todoService.delete(todo));
-                   .flatMap(todoService::delete);
+    public Mono<ResponseEntity<Void>> delete(@PathVariable String id){
+//        return    todoService.findById(id)
+//      //             .flatMap(todo->todoService.delete(todo));
+//                   .flatMap(todoService::delete);
+        return todoService.findById(id)
+                .flatMap(todo->todoService.delete(todo)
+                                .then(Mono.just(ResponseEntity.noContent().<Void>build()))
+
+                        )
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
 
     }
+
 
 }

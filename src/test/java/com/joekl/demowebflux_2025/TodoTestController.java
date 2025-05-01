@@ -56,6 +56,45 @@ public class TodoTestController {
 
     }
 
+    @Test
+    void create(){
+
+        Todo todo =new Todo();
+        todo.setName("Prueba created");
+        todo.setCompleted(true);
+
+        webTestClient.post()
+                .uri("api/v1/todos")
+                .bodyValue(todo)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody()
+                .jsonPath("$.id").isNotEmpty()
+                .jsonPath("$.completed").isEqualTo(todo.getCompleted())
+                .jsonPath("$.name").isEqualTo(todo.getName());
+
+    }
+
+    @Test
+    void delete(){
+        Todo todo = createExampleTodo();
+        webTestClient.delete()
+                .uri("/api/v1/todos/{id}",todo.getId())
+                .exchange()
+                .expectStatus().isNoContent()
+                .expectBody().isEmpty(); //Decir que el cuerpo esta vacio
+    }
+
+    @Test
+    void deleteNotFound(){
+
+        webTestClient.delete()
+                .uri("/api/v1/todos/{id}","id que no existe")
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().isEmpty(); //Decir que el cuerpo esta vacio
+    }
+
     private Todo createExampleTodo(){
         Todo todo = new Todo();
         todo.setName("Repasar la clase");
